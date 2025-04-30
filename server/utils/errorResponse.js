@@ -1,4 +1,4 @@
-// server/utils/errorResponse.js (завершение)
+// server/utils/errorResponse.js
 class ErrorResponse extends Error {
     constructor(message, statusCode) {
       super(message);
@@ -7,9 +7,3 @@ class ErrorResponse extends Error {
   }
   
   module.exports = ErrorResponse;
-  
-  // server/middleware/async.middleware.js (завершение)
-  const asyncHandler = fn => (req, res, next) => 
-    Promise.resolve(fn(req, res, next)).catch(next);
-  
-  module.exports = asyncHandler;

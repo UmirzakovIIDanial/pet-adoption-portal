@@ -55,9 +55,9 @@ app.use(xss());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 mins
-  max: 100
-});
+    windowMs: 10 * 60 * 1000, // 10 минут
+    max: 500 // увеличьте это значение (было 100)
+  });
 app.use(limiter);
 
 // Prevent http param pollution

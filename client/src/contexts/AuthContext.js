@@ -128,38 +128,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Forgot password
-  const forgotPassword = async (email) => {
-    try {
-      setLoading(true);
-      const res = await axios.post('/api/auth/forgotpassword', { email });
-      toast.success(res.data.data);
-      return true;
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error processing request');
-      toast.error(err.response?.data?.error || 'Error processing request');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reset password
-  const resetPassword = async (password, resetToken) => {
-    try {
-      setLoading(true);
-      await axios.put(`/api/auth/resetpassword/${resetToken}`, { password });
-      toast.success('Password has been reset, you can now login');
-      return true;
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error resetting password');
-      toast.error(err.response?.data?.error || 'Error resetting password');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Check if token is expired
   const isTokenExpired = () => {
     if (!token) return true;
@@ -207,8 +175,6 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateProfile,
         changePassword,
-        forgotPassword,
-        resetPassword,
         setError
       }}
     >

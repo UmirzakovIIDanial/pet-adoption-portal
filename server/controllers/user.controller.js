@@ -4,7 +4,6 @@ const asyncHandler = require('../middleware/async.middleware');
 const Adoption = require('../models/adoption.model');
 const Pet = require('../models/pet.model');
 const User = require('../models/user.model');
-const sendEmail = require('../utils/sendEmail');
 
 // @desc    Get user's adoption applications
 // @route   GET /api/users/adoptions
@@ -74,19 +73,6 @@ exports.submitAdoption = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   user.adoptionHistory.push(adoption._id);
   await user.save();
-
-  // Notify shelter about new application
-  const shelter = await User.findById(pet.shelter);
-  
-  try {
-    await sendEmail({
-      email: shelter.email,
-      subject: `New Adoption Application for ${pet.name}`,
-      message: `You have received a new adoption application for ${pet.name} from ${user.name}. Please login to your account to review the application.`
-    });
-  } catch (err) {
-    console.log(err);
-  }
 
   res.status(201).json({
     success: true,
@@ -197,26 +183,6 @@ exports.updateAdoption = asyncHandler(async (req, res, next) => {
           pet.adoptionStatus = 'Available';
           await pet.save();
         }
-      }
-
-      // Notify applicant about status change
-      const applicant = await User.findById(adoption.applicant);
-      const pet = await Pet.findById(adoption.pet);
-      
-      try {
-        await sendEmail({
-          email: applicant.email,
-          subject: `Your Adoption Application for ${pet.name} has been ${newStatus}`,
-          message: `Your adoption application for ${pet.name} has been ${newStatus.toLowerCase()}. ${
-            newStatus === 'Approved' 
-              ? 'The shelter will contact you soon to arrange the next steps.' 
-              : newStatus === 'Rejected'
-                ? 'Thank you for your interest.'
-                : 'Please check your account for more details.'
-          }`
-        });
-      } catch (err) {
-        console.log(err);
       }
     }
   }

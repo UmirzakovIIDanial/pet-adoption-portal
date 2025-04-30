@@ -1,5 +1,5 @@
 // client/src/components/User/Dashboard.js
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Container, Row, Col, Card, Tab, Nav, Badge, Table } from 'react-bootstrap';
 import { FaPaw, FaClipboardList, FaUserEdit, FaKey } from 'react-icons/fa';
 import { PetContext } from '../../contexts/PetContext';
@@ -12,9 +12,18 @@ const Dashboard = () => {
   const { user, updateProfile, changePassword, loading: authLoading } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('applications');
 
+  // Изменение здесь - используем useRef для создания стабильной ссылки на функцию
+  const getUserAdoptionsRef = useRef(getUserAdoptions);
+  
+  // Обновляем ссылку, если функция меняется
   useEffect(() => {
-    getUserAdoptions();
+    getUserAdoptionsRef.current = getUserAdoptions;
   }, [getUserAdoptions]);
+
+  // Используем стабильную ссылку в эффекте, который запускается только при монтировании
+  useEffect(() => {
+    getUserAdoptionsRef.current();
+  }, []);
 
   const getStatusBadgeVariant = (status) => {
     switch (status) {

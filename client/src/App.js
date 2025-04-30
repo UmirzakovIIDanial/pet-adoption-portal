@@ -20,8 +20,7 @@ import AboutPage from './pages/AboutPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ShelterDashboardPage from './pages/ShelterDashboardPage';
 import AddPetPage from './pages/AddPetPage';
-import ForgotPasswordPage from './pages/ForgotPassword';
-import ResetPasswordPage from './pages/ResetPassword';
+
 // Routes
 import PrivateRoute from './components/Common/PrivateRoute';
 
@@ -44,8 +43,6 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password/:resetToken" element={<ResetPasswordPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/pets/:id" element={<PetDetailPage />} />
                 

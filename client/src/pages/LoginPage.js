@@ -98,12 +98,7 @@ const LoginPage = () => {
                 </Form.Group>
                 
                 <Form.Group className="mb-4">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Form.Label>Password</Form.Label>
-                    <Link to="/forgot-password" className="text-primary small">
-                      Forgot Password?
-                    </Link>
-                  </div>
+                  <Form.Label>Password</Form.Label>
                   <div className="input-group">
                     <span className="input-group-text">
                       <FaLock />
