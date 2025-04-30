@@ -40,8 +40,14 @@ export const PetProvider = ({ children }) => {
     }
   };
 
-  // Get single pet
+  // В PetContext.js
+// Get single pet
   const getPet = async (id) => {
+    // Если уже загружен этот питомец, не делаем повторный запрос
+    if (pet && pet._id === id) {
+      return pet;
+    }
+    
     try {
       setLoading(true);
       const res = await axios.get(`/api/pets/${id}`);
@@ -62,24 +68,30 @@ export const PetProvider = ({ children }) => {
       setLoading(true);
       const formData = new FormData();
       
-      // Append form fields to FormData
+      // Append basic string fields
       Object.keys(petData).forEach(key => {
-        if (key === 'photos') {
-          // Handle file upload
-          if (petData.photos instanceof FileList) {
-            for (let i = 0; i < petData.photos.length; i++) {
-              formData.append('photo', petData.photos[i]);
-            }
-          } else if (petData.photos instanceof File) {
-            formData.append('photo', petData.photos);
-          }
+        if (key === 'photos' || key === 'photo') {
+          // Skip - we'll handle files separately
         } else if (key === 'healthStatus' || key === 'age') {
-          // Handle nested objects
+          // Handle nested objects by stringifying them
           formData.append(key, JSON.stringify(petData[key]));
         } else {
           formData.append(key, petData[key]);
         }
       });
+      
+      // Handle file upload
+      if (petData.photo) {
+        formData.append('photo', petData.photo);
+      } else if (petData.photos) {
+        if (petData.photos instanceof FileList) {
+          for (let i = 0; i < petData.photos.length; i++) {
+            formData.append('photo', petData.photos[i]);
+          }
+        } else if (petData.photos instanceof File) {
+          formData.append('photo', petData.photos);
+        }
+      }
       
       const res = await axios.post('/api/pets', formData, {
         headers: {
@@ -91,8 +103,9 @@ export const PetProvider = ({ children }) => {
       toast.success('Pet added successfully');
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error adding pet');
-      toast.error(err.response?.data?.error || 'Error adding pet');
+      const errorMsg = err.response?.data?.error || 'Error adding pet';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setLoading(false);
@@ -243,7 +256,8 @@ export const PetProvider = ({ children }) => {
   };
 
   // Filter pets
-  const filterPets = (filterParams) => {
+const filterPets = (filterParams) => {
+    console.log('Filtering pets with params:', filterParams);
     setFilters(filterParams);
     
     let results = [...pets];
@@ -252,10 +266,12 @@ export const PetProvider = ({ children }) => {
       results = results.filter(pet => pet.type === filterParams.type);
     }
     
-    if (filterParams.breed) {
-      results = results.filter(pet => 
-        pet.breed.toLowerCase().includes(filterParams.breed.toLowerCase())
-      );
+    if (filterParams.gender) {
+      results = results.filter(pet => pet.gender === filterParams.gender);
+    }
+    
+    if (filterParams.size) {
+      results = results.filter(pet => pet.size === filterParams.size);
     }
     
     if (filterParams.age) {
@@ -267,28 +283,21 @@ export const PetProvider = ({ children }) => {
       });
     }
     
-    if (filterParams.gender) {
-      results = results.filter(pet => pet.gender === filterParams.gender);
-    }
-    
-    if (filterParams.size) {
-      results = results.filter(pet => pet.size === filterParams.size);
-    }
-    
+    console.log('Filtered pets result:', results.length);
     setFilteredPets(results);
     return results;
   };
 
   // Clear filters
-  const clearFilters = () => {
+    const clearFilters = () => {
+    console.log('Clearing all filters');
     setFilters({
       type: '',
-      breed: '',
-      age: '',
       gender: '',
-      size: ''
+      size: '',
+      age: ''
     });
-    setFilteredPets(pets);
+    setFilteredPets([]);
     return pets;
   };
 

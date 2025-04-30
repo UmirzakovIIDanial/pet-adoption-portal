@@ -14,10 +14,15 @@ const PetDetailPage = () => {
   const { getPet, pet, loading, error, submitAdoption } = useContext(PetContext);
   const { isAuthenticated } = useContext(AuthContext);
   const [submitting, setSubmitting] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   useEffect(() => {
-    getPet(id);
-  }, [getPet, id]);
+    // Предотвращаем повторные запросы, если данные уже загружены
+    if (isInitialLoad) {
+      getPet(id);
+      setIsInitialLoad(false);
+    }
+  }, [getPet, id, isInitialLoad]);
   
   const handleAdoptionSubmit = async (formData) => {
     if (!isAuthenticated) {
@@ -38,7 +43,7 @@ const PetDetailPage = () => {
     }
   };
   
-  if (loading) {
+  if (loading && isInitialLoad) {
     return <Loader />;
   }
   

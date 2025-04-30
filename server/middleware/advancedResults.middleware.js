@@ -17,8 +17,16 @@ const advancedResults = (model, populate) => async (req, res, next) => {
     // Create operators ($gt, $gte, etc)
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
   
-    // Finding resource
-    query = model.find(JSON.parse(queryStr));
+    // Create initial query
+    // Если есть предварительно подготовленный фильтр в req.advancedQuery, используем его 
+    // вместе с parsed queryStr
+    if (req.advancedQuery) {
+      // Объединяем оба объекта фильтров
+      query = model.find({ ...JSON.parse(queryStr), ...req.advancedQuery });
+      console.log('Combined query:', JSON.stringify({ ...JSON.parse(queryStr), ...req.advancedQuery }));
+    } else {
+      query = model.find(JSON.parse(queryStr));
+    }
   
     // Select Fields
     if (req.query.select) {
@@ -39,7 +47,16 @@ const advancedResults = (model, populate) => async (req, res, next) => {
     const limit = parseInt(req.query.limit, 10) || 10;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await model.countDocuments(JSON.parse(queryStr));
+    
+    // Получаем правильное количество документов с учетом фильтров
+    let countQuery;
+    if (req.advancedQuery) {
+      countQuery = model.countDocuments({ ...JSON.parse(queryStr), ...req.advancedQuery });
+    } else {
+      countQuery = model.countDocuments(JSON.parse(queryStr));
+    }
+    
+    const total = await countQuery;
   
     query = query.skip(startIndex).limit(limit);
   
@@ -83,4 +100,4 @@ const advancedResults = (model, populate) => async (req, res, next) => {
     next();
   };
   
-module.exports = advancedResults;
+  module.exports = advancedResults;

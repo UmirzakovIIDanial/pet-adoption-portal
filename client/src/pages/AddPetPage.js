@@ -4,10 +4,12 @@ import { Container, Row, Col, Card, Form, Button, Alert, Image } from 'react-boo
 import { useNavigate } from 'react-router-dom';
 import { FaPaw, FaDog, FaVenusMars, FaRuler, FaPalette, FaInfoCircle, FaFileMedical, FaSmile, FaImage } from 'react-icons/fa';
 import { PetContext } from '../contexts/PetContext';
+import axios from 'axios';
+import Loader from '../components/Common/Loader';
 
 const AddPetPage = () => {
   const navigate = useNavigate();
-  const { addPet, loading, error } = useContext(PetContext);
+  const { loading, error } = useContext(PetContext);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -26,13 +28,14 @@ const AddPetPage = () => {
       vaccinated: false,
       neutered: false,
       medicalConditions: ''
-    },
-    photos: null
+    }
   });
   
+  const [photo, setPhoto] = useState(null);
   const [previewURL, setPreviewURL] = useState(null);
   const [validated, setValidated] = useState(false);
   const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -62,11 +65,8 @@ const AddPetPage = () => {
       const fileURL = URL.createObjectURL(file);
       setPreviewURL(fileURL);
       
-      // Set file in form data
-      setFormData(prev => ({
-        ...prev,
-        photos: file
-      }));
+      // Set file in state
+      setPhoto(file);
     }
   };
   
@@ -83,21 +83,52 @@ const AddPetPage = () => {
     setValidated(true);
     
     // Additional validation
-    if (!formData.photos) {
+    if (!photo) {
       setFormError('Please upload at least one photo');
       return;
     }
     
     try {
-      const result = await addPet(formData);
+      setIsSubmitting(true);
       
-      if (result) {
-        navigate(`/pets/${result._id}`);
+      // Create FormData object for multipart/form-data submission
+      const petFormData = new FormData();
+      
+      // Append basic fields
+      Object.keys(formData).forEach(key => {
+        if (key === 'age' || key === 'healthStatus') {
+          // For nested objects, stringify them
+          petFormData.append(key, JSON.stringify(formData[key]));
+        } else {
+          petFormData.append(key, formData[key]);
+        }
+      });
+      
+      // Append photo file
+      petFormData.append('photo', photo);
+      
+      // Send request
+      const response = await axios.post('/api/pets', petFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.data.success) {
+        // Navigate to the created pet's page
+        navigate(`/pets/${response.data.data._id}`);
+      } else {
+        throw new Error('Failed to add pet');
       }
     } catch (err) {
-      setFormError('Error adding pet. Please try again.');
+      setFormError(err.response?.data?.error || 'Error adding pet. Please try again.');
+      setIsSubmitting(false);
     }
   };
+  
+  if (loading && !isSubmitting) {
+    return <Loader />;
+  }
   
   return (
     <Container className="py-5">
@@ -435,15 +466,16 @@ const AddPetPage = () => {
                   <Button 
                     variant="outline-secondary" 
                     onClick={() => navigate(-1)}
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </Button>
                   <Button 
                     variant="primary" 
                     type="submit"
-                    disabled={loading}
+                    disabled={isSubmitting}
                   >
-                    {loading ? 'Adding Pet...' : 'Add Pet'}
+                    {isSubmitting ? 'Adding Pet...' : 'Add Pet'}
                   </Button>
                 </div>
               </Form>
