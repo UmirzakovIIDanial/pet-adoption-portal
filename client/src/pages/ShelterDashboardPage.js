@@ -27,9 +27,11 @@ const ShelterDashboardPage = () => {
   const [applicationStatus, setApplicationStatus] = useState('');
   const [statusComment, setStatusComment] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
+  const [shelterPets, setShelterPets] = useState([]);
   
   const { user } = useContext(AuthContext);
-  const { pets, getPets, deletePet, loading: petsLoading } = useContext(PetContext);
+  const { pets: contextPets, deletePet, loading: petsLoading } = useContext(PetContext);
+  const [pets, setPets] = useState([]);
   
   useEffect(() => {
     let isMounted = true;
@@ -38,7 +40,7 @@ const ShelterDashboardPage = () => {
       try {
         setLoading(true);
         
-        // Получаем профиль приюта
+        // Fetch shelter profile
         try {
           const shelterRes = await axios.get('/api/users/shelter');
           if (isMounted) {
@@ -48,12 +50,19 @@ const ShelterDashboardPage = () => {
           console.error('Error fetching shelter data:', shelterErr);
         }
         
-        // Получаем питомцев
-        if (isMounted) {
-          await getPets();
+        // Fetch pets
+        try {
+          if (isMounted) {
+            const petsRes = await axios.get('/api/pets');
+            if (isMounted) {
+              setPets(petsRes.data.data || []);
+            }
+          }
+        } catch (petsErr) {
+          console.error('Error fetching pets:', petsErr);
         }
         
-        // Получаем заявки на усыновление
+        // Fetch adoption applications
         try {
           const adoptionsRes = await axios.get('/api/users/shelter/adoptions');
           if (isMounted) {
@@ -61,9 +70,6 @@ const ShelterDashboardPage = () => {
           }
         } catch (adoptionsErr) {
           console.error('Error fetching adoptions:', adoptionsErr);
-          if (isMounted) {
-            setAdoptions([]);
-          }
         }
         
         if (isMounted) {
@@ -80,12 +86,27 @@ const ShelterDashboardPage = () => {
     
     fetchShelterData();
     
-    // Функция очистки
+    // Cleanup function
     return () => {
       isMounted = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  
+  // Filter shelter pets when pets or user changes
+  useEffect(() => {
+    if (pets && pets.length > 0 && user) {
+      // Important: Convert IDs to strings for reliable comparison
+      const shelterPetsFiltered = pets.filter(pet => 
+        pet.shelter && (String(pet.shelter) === String(user._id) || 
+                        (pet.shelter._id && String(pet.shelter._id) === String(user._id)))
+      );
+      console.log('User ID:', user._id);
+      console.log('All Pets:', pets);
+      console.log('Filtered Shelter Pets:', shelterPetsFiltered);
+      setShelterPets(shelterPetsFiltered);
+    }
+  }, [pets, user]);
   
   const handleDeleteClick = (pet) => {
     setPetToDelete(pet);
@@ -98,6 +119,8 @@ const ShelterDashboardPage = () => {
       
       if (success) {
         toast.success(`${petToDelete.name} has been removed`);
+        // Update shelterPets after deletion
+        setShelterPets(shelterPets.filter(pet => pet._id !== petToDelete._id));
       }
       
       setShowDeleteModal(false);
@@ -143,25 +166,27 @@ const ShelterDashboardPage = () => {
   };
   
   // Filter pets based on search term
-  const filteredPets = pets
-    .filter(pet => pet.shelter === user._id)
-    .filter(pet => {
-      const term = searchTerm.toLowerCase();
-      return (
-        pet.name.toLowerCase().includes(term) ||
-        pet.breed.toLowerCase().includes(term) ||
-        pet.type.toLowerCase().includes(term) ||
-        pet.adoptionStatus.toLowerCase().includes(term)
-      );
-    });
+  const filteredPets = shelterPets.filter(pet => {
+    if (!searchTerm) return true;
+    
+    const term = searchTerm.toLowerCase();
+    return (
+      pet.name.toLowerCase().includes(term) ||
+      pet.breed.toLowerCase().includes(term) ||
+      pet.type.toLowerCase().includes(term) ||
+      (pet.adoptionStatus && pet.adoptionStatus.toLowerCase().includes(term))
+    );
+  });
   
   // Filter adoptions based on search term
   const filteredAdoptions = adoptions.filter(adoption => {
+    if (!searchTerm) return true;
+    
     const term = searchTerm.toLowerCase();
     return (
-      adoption.pet?.name?.toLowerCase().includes(term) ||
-      adoption.applicant?.name?.toLowerCase().includes(term) ||
-      adoption.status.toLowerCase().includes(term)
+      (adoption.pet?.name?.toLowerCase() || '').includes(term) ||
+      (adoption.applicant?.name?.toLowerCase() || '').includes(term) ||
+      (adoption.status?.toLowerCase() || '').includes(term)
     );
   });
   
@@ -173,7 +198,7 @@ const ShelterDashboardPage = () => {
   // Pagination for adoptions
   const indexOfLastAdoption = currentPage * itemsPerPage;
   const indexOfFirstAdoption = indexOfLastAdoption - itemsPerPage;
-  const currentAdoptions = filteredAdoptions.slice(indexOfFirstAdoption, indexOfFirstAdoption + itemsPerPage);
+  const currentAdoptions = filteredAdoptions.slice(indexOfFirstAdoption, indexOfLastAdoption);
   
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -210,8 +235,6 @@ const ShelterDashboardPage = () => {
     );
   }
   
-  const shelterPets = pets.filter(pet => pet.shelter === user?._id) || [];
-  
   // Count statistics
   const totalPets = shelterPets.length;
   const availablePets = shelterPets.filter(pet => pet.adoptionStatus === 'Available').length;
@@ -232,9 +255,9 @@ const ShelterDashboardPage = () => {
               <div className="shelter-profile p-3 border-bottom">
                 <div className="text-center mb-3">
                   <div className="shelter-avatar mb-2">
-                    {shelter?.name?.charAt(0).toUpperCase() || 'S'}
+                    {(shelter?.name || user?.name || 'S').charAt(0).toUpperCase()}
                   </div>
-                  <h5 className="mb-1">{shelter?.name || user?.name}</h5>
+                  <h5 className="mb-1">{shelter?.name || user?.name || 'Shelter'}</h5>
                   <p className="mb-0 text-muted small">
                     {shelter?.verified ? (
                       <Badge bg="success">Verified Shelter</Badge>
@@ -357,10 +380,10 @@ const ShelterDashboardPage = () => {
                                   <div className="small text-muted">{pet.breed}</div>
                                 </td>
                                 <td>
-                                  {pet.age.years > 0 ? `${pet.age.years} yr${pet.age.years !== 1 ? 's' : ''}` : ''}
-                                  {pet.age.years > 0 && pet.age.months > 0 ? ', ' : ''}
-                                  {pet.age.months > 0 ? `${pet.age.months} mo${pet.age.months !== 1 ? 's' : ''}` : ''}
-                                  {pet.age.years === 0 && pet.age.months === 0 ? 'Under 1 month' : ''}
+                                  {pet.age?.years > 0 ? `${pet.age.years} yr${pet.age.years !== 1 ? 's' : ''}` : ''}
+                                  {pet.age?.years > 0 && pet.age?.months > 0 ? ', ' : ''}
+                                  {pet.age?.months > 0 ? `${pet.age.months} mo${pet.age.months !== 1 ? 's' : ''}` : ''}
+                                  {pet.age?.years === 0 && pet.age?.months === 0 ? 'Under 1 month' : ''}
                                 </td>
                                 <td>{pet.gender}</td>
                                 <td>

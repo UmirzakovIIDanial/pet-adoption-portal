@@ -1,4 +1,3 @@
-// client/src/components/Admin/ManageUsers.js
 import React, { useState } from 'react';
 import { Card, Table, Badge, Button, Form } from 'react-bootstrap';
 import { FaEye, FaSearch } from 'react-icons/fa';
@@ -102,15 +101,15 @@ const ManageUsers = ({ users, loading, error }) => {
                         <td>
                           <div className="d-flex align-items-center">
                             <div className="user-avatar me-2">
-                              {user.name.charAt(0).toUpperCase()}
+                              {user.name ? user.name.charAt(0).toUpperCase() : '?'}
                             </div>
-                            <div>{user.name}</div>
+                            <div>{user.name || 'Unknown'}</div>
                           </div>
                         </td>
                         <td>{user.email}</td>
                         <td>
-                          <Badge bg={getRoleBadgeVariant(user.role)}>
-                            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                          <Badge bg={getRoleBadgeVariant(user.role || 'unknown')}>
+                            {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Unknown'}
                           </Badge>
                         </td>
                         <td>{user.phone || 'N/A'}</td>

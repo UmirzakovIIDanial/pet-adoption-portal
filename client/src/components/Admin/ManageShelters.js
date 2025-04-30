@@ -100,14 +100,6 @@ const ManageShelters = ({ shelters, loading, error, onVerify }) => {
                         <td>
                           <div className="d-flex align-items-center">
                             <div className="shelter-logo me-2">
-                              <img
-                                src={shelter.logo 
-                                  ? `/uploads/shelters/${shelter.logo}` 
-                                  : '/images/shelter-placeholder.jpg'
-                                }
-                                alt={shelter.name}
-                                className="img-fluid rounded"
-                              />
                             </div>
                             <div>{shelter.name}</div>
                           </div>

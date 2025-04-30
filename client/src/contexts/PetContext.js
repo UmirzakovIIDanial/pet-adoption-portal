@@ -21,29 +21,34 @@ export const PetProvider = ({ children }) => {
     size: ''
   });
   
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user } = useContext(AuthContext);
 
   // Get all pets
   const getPets = async () => {
     try {
       setLoading(true);
       const res = await axios.get('/api/pets');
+      
+      console.log('Fetched pets:', res.data.data);
+      
+      // Store the fetched pets
       setPets(res.data.data);
       setFilteredPets(res.data.data);
+      
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error fetching pets');
-      toast.error(err.response?.data?.error || 'Error fetching pets');
+      const errorMsg = err.response?.data?.error || 'Error fetching pets';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return [];
     } finally {
       setLoading(false);
     }
   };
 
-  // В PetContext.js
-// Get single pet
+  // Get single pet
   const getPet = async (id) => {
-    // Если уже загружен этот питомец, не делаем повторный запрос
+    // If already loaded this pet, don't re-fetch
     if (pet && pet._id === id) {
       return pet;
     }
@@ -54,8 +59,9 @@ export const PetProvider = ({ children }) => {
       setPet(res.data.data);
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error fetching pet details');
-      toast.error(err.response?.data?.error || 'Error fetching pet details');
+      const errorMsg = err.response?.data?.error || 'Error fetching pet details';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setLoading(false);
@@ -99,7 +105,8 @@ export const PetProvider = ({ children }) => {
         }
       });
       
-      setPets([...pets, res.data.data]);
+      // Add the new pet to our state
+      setPets(prevPets => [...prevPets, res.data.data]);
       toast.success('Pet added successfully');
       return res.data.data;
     } catch (err) {
@@ -129,8 +136,9 @@ export const PetProvider = ({ children }) => {
       toast.success('Pet updated successfully');
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error updating pet');
-      toast.error(err.response?.data?.error || 'Error updating pet');
+      const errorMsg = err.response?.data?.error || 'Error updating pet';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setLoading(false);
@@ -154,8 +162,9 @@ export const PetProvider = ({ children }) => {
       toast.success('Pet removed successfully');
       return true;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error deleting pet');
-      toast.error(err.response?.data?.error || 'Error deleting pet');
+      const errorMsg = err.response?.data?.error || 'Error deleting pet';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return false;
     } finally {
       setLoading(false);
@@ -185,8 +194,9 @@ export const PetProvider = ({ children }) => {
       toast.success('Photo uploaded successfully');
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error uploading photo');
-      toast.error(err.response?.data?.error || 'Error uploading photo');
+      const errorMsg = err.response?.data?.error || 'Error uploading photo';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setLoading(false);
@@ -200,11 +210,14 @@ export const PetProvider = ({ children }) => {
     try {
       setLoading(true);
       const res = await axios.get('/api/users/adoptions');
+      
+      console.log('Fetched user adoptions:', res.data.data);
       setAdoptions(res.data.data);
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error fetching adoption applications');
-      toast.error(err.response?.data?.error || 'Error fetching adoption applications');
+      const errorMsg = err.response?.data?.error || 'Error fetching adoption applications';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return [];
     } finally {
       setLoading(false);
@@ -221,12 +234,13 @@ export const PetProvider = ({ children }) => {
       };
       
       const res = await axios.post('/api/users/adoptions', data);
-      setAdoptions([...adoptions, res.data.data]);
+      setAdoptions(prevAdoptions => [...prevAdoptions, res.data.data]);
       toast.success('Adoption application submitted successfully');
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error submitting adoption application');
-      toast.error(err.response?.data?.error || 'Error submitting adoption application');
+      const errorMsg = err.response?.data?.error || 'Error submitting adoption application';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setLoading(false);
@@ -247,8 +261,9 @@ export const PetProvider = ({ children }) => {
       toast.success('Adoption application updated successfully');
       return res.data.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Error updating adoption application');
-      toast.error(err.response?.data?.error || 'Error updating adoption application');
+      const errorMsg = err.response?.data?.error || 'Error updating adoption application';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setLoading(false);
@@ -256,7 +271,7 @@ export const PetProvider = ({ children }) => {
   };
 
   // Filter pets
-const filterPets = (filterParams) => {
+  const filterPets = (filterParams) => {
     console.log('Filtering pets with params:', filterParams);
     setFilters(filterParams);
     
@@ -289,7 +304,7 @@ const filterPets = (filterParams) => {
   };
 
   // Clear filters
-    const clearFilters = () => {
+  const clearFilters = () => {
     console.log('Clearing all filters');
     setFilters({
       type: '',
@@ -297,14 +312,35 @@ const filterPets = (filterParams) => {
       size: '',
       age: ''
     });
-    setFilteredPets([]);
+    setFilteredPets(pets);
     return pets;
+  };
+
+  // Get shelter pets - new function to help filter pets by shelter
+  const getShelterPets = () => {
+    if (!user || !pets.length) return [];
+    
+    return pets.filter(pet => {
+      if (!pet.shelter) return false;
+      
+      // Handle different shelter ID formats
+      if (typeof pet.shelter === 'string' || pet.shelter instanceof String) {
+        return String(pet.shelter) === String(user._id);
+      }
+      
+      // Handle case where shelter is an object with _id property (populated by mongoose)
+      if (pet.shelter._id) {
+        return String(pet.shelter._id) === String(user._id);
+      }
+      
+      // Handle other cases
+      return String(pet.shelter) === String(user._id);
+    });
   };
 
   // Load pets initially
   useEffect(() => {
     getPets();
-    // eslint-disable-next-line
   }, []);
 
   // Load user's adoptions when authenticated
@@ -312,7 +348,7 @@ const filterPets = (filterParams) => {
     if (isAuthenticated) {
       getUserAdoptions();
     }
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   return (
@@ -336,6 +372,7 @@ const filterPets = (filterParams) => {
         updateAdoption,
         filterPets,
         clearFilters,
+        getShelterPets, // New function to help with shelter pets
         setError
       }}
     >

@@ -1,4 +1,3 @@
-// client/src/components/Admin/ApplicationReview.js
 import React, { useState } from 'react';
 import { Card, Table, Badge, Button, Form, Modal } from 'react-bootstrap';
 import { FaEye, FaSearch } from 'react-icons/fa';
@@ -114,7 +113,6 @@ const ApplicationReview = ({ adoptions, loading, error }) => {
                     </tr>
                   </thead>
                   <tbody>
-                  // client/src/components/Admin/ApplicationReview.js (продолжение)
                     {currentItems.map((adoption) => (
                       <tr key={adoption._id}>
                         <td>{adoption._id.substring(0, 8)}...</td>
