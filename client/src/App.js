@@ -21,6 +21,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import ShelterDashboardPage from './pages/ShelterDashboardPage';
 import AddPetPage from './pages/AddPetPage';
 import PetsPage from './pages/PetsPage';
+import EditPetPage from './pages/EditPetPage';
 
 // Routes
 import PrivateRoute from './components/Common/PrivateRoute';
@@ -47,6 +48,15 @@ function App() {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/pets" element={<PetsPage />} />
                 <Route path="/pets/:id" element={<PetDetailPage />} />
+
+                <Route 
+                  path="/edit-pet/:id" 
+                  element={
+                    <PrivateRoute requiredRole="shelter">
+                      <EditPetPage />
+                    </PrivateRoute>
+                  } 
+                />
                 
                 {/* Private Routes */}
                 <Route 

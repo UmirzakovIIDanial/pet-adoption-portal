@@ -7,6 +7,7 @@ const ApplicationReview = ({ adoptions, loading, error }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [selectedAdoption, setSelectedAdoption] = useState(null);
   
@@ -19,10 +20,16 @@ const ApplicationReview = ({ adoptions, loading, error }) => {
     
     const term = searchTerm.toLowerCase();
     
-    return petName.includes(term) || 
+    // Проверяем соответствие поисковому запросу
+    const matchesSearch = petName.includes(term) || 
            applicantName.includes(term) || 
            shelterName.includes(term) || 
            status.includes(term);
+    
+    // Проверяем соответствие фильтру статуса
+    const matchesStatus = statusFilter === '' || adoption.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
   
   // Pagination logic
@@ -58,6 +65,11 @@ const ApplicationReview = ({ adoptions, loading, error }) => {
     setShowDetails(false);
     setSelectedAdoption(null);
   };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Сбрасываем страницу при смене фильтра
+  };
   
   if (error) {
     return (
@@ -84,7 +96,11 @@ const ApplicationReview = ({ adoptions, loading, error }) => {
                 className="ps-4"
               />
             </div>
-            <Form.Select className="w-auto">
+            <Form.Select 
+              className="w-auto"
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+            >
               <option value="">All Statuses</option>
               <option value="Pending">Pending</option>
               <option value="Approved">Approved</option>

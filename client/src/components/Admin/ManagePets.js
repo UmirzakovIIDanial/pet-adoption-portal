@@ -10,12 +10,13 @@ const ManagePets = ({ pets, loading, error }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPet, setSelectedPet] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [petToDelete, setPetToDelete] = useState(null);
   
-  // Filter pets based on search term
+  // Фильтрация с учетом статуса
   const filteredPets = pets.filter(pet => {
     const petName = pet.name?.toLowerCase() || '';
     const petType = pet.type?.toLowerCase() || '';
@@ -24,10 +25,15 @@ const ManagePets = ({ pets, loading, error }) => {
     
     const term = searchTerm.toLowerCase();
     
-    return petName.includes(term) || 
+    const matchesSearch = petName.includes(term) || 
            petType.includes(term) || 
            petBreed.includes(term) || 
            status.includes(term);
+    
+    // Проверяем соответствие фильтру статуса
+    const matchesStatus = statusFilter === '' || pet.adoptionStatus === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
   
   // Pagination logic
@@ -82,6 +88,11 @@ const ManagePets = ({ pets, loading, error }) => {
       toast.error(err.response?.data?.error || 'Error deleting pet');
     }
   };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Сбрасываем страницу при смене фильтра
+  };
   
   if (error) {
     return (
@@ -108,7 +119,11 @@ const ManagePets = ({ pets, loading, error }) => {
                 className="ps-4"
               />
             </div>
-            <Form.Select className="w-auto">
+            <Form.Select 
+              className="w-auto"
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+            >
               <option value="">All Statuses</option>
               <option value="Available">Available</option>
               <option value="Pending">Pending</option>

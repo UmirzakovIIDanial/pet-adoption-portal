@@ -1,14 +1,18 @@
+// client/src/components/Admin/ManageUsers.js
 import React, { useState } from 'react';
-import { Card, Table, Badge, Button, Form } from 'react-bootstrap';
-import { FaEye, FaSearch } from 'react-icons/fa';
+import { Card, Table, Badge, Button, Form, Modal, Row, Col } from 'react-bootstrap';
+import { FaEye, FaSearch, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 import Pagination from '../Common/Pagination';
 
 const ManageUsers = ({ users, loading, error }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState(''); // Добавляем состояние для фильтра ролей
+  const [showUserDetails, setShowUserDetails] = useState(false); // Для модального окна
+  const [selectedUser, setSelectedUser] = useState(null); // Выбранный пользователь для просмотра
   
-  // Filter users based on search term
+  // Фильтрация пользователей с учетом фильтра ролей
   const filteredUsers = users.filter(user => {
     const userName = user.name?.toLowerCase() || '';
     const userEmail = user.email?.toLowerCase() || '';
@@ -16,12 +20,18 @@ const ManageUsers = ({ users, loading, error }) => {
     
     const term = searchTerm.toLowerCase();
     
-    return userName.includes(term) || 
+    // Проверяем соответствие поисковому запросу
+    const matchesSearch = userName.includes(term) || 
            userEmail.includes(term) || 
            userRole.includes(term);
+    
+    // Проверяем соответствие фильтру ролей
+    const matchesRole = roleFilter === '' || user.role === roleFilter;
+    
+    return matchesSearch && matchesRole;
   });
   
-  // Pagination logic
+  // Пагинация
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
@@ -30,6 +40,19 @@ const ManageUsers = ({ users, loading, error }) => {
     setCurrentPage(pageNumber);
   };
   
+  // Обработчик изменения фильтра ролей
+  const handleRoleFilterChange = (e) => {
+    setRoleFilter(e.target.value);
+    setCurrentPage(1); // Сбрасываем на первую страницу при смене фильтра
+  };
+  
+  // Обработчик для просмотра деталей пользователя
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setShowUserDetails(true);
+  };
+  
+  // Определяем цвет бейджа по роли
   const getRoleBadgeVariant = (role) => {
     switch (role) {
       case 'admin':
@@ -68,7 +91,11 @@ const ManageUsers = ({ users, loading, error }) => {
                 className="ps-4"
               />
             </div>
-            <Form.Select className="w-auto">
+            <Form.Select 
+              className="w-auto"
+              value={roleFilter}
+              onChange={handleRoleFilterChange}
+            >
               <option value="">All Roles</option>
               <option value="user">Regular Users</option>
               <option value="shelter">Shelters</option>
@@ -113,7 +140,7 @@ const ManageUsers = ({ users, loading, error }) => {
                           </Badge>
                         </td>
                         <td>{user.phone || 'N/A'}</td>
-                        <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
                         <td>
                           {user.address?.city && user.address?.country 
                             ? `${user.address.city}, ${user.address.country}`
@@ -124,7 +151,7 @@ const ManageUsers = ({ users, loading, error }) => {
                           <Button 
                             variant="outline-primary" 
                             size="sm"
-                            href={`/admin/users/${user._id}`}
+                            onClick={() => handleViewUser(user)}
                           >
                             <FaEye />
                           </Button>
@@ -144,6 +171,69 @@ const ManageUsers = ({ users, loading, error }) => {
           )}
         </Card.Body>
       </Card>
+      
+      {/* Модальное окно с деталями пользователя */}
+      {selectedUser && (
+        <Modal 
+          show={showUserDetails} 
+          onHide={() => setShowUserDetails(false)}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>User Details: {selectedUser.name}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row className="mb-4">
+              <Col md={6} className="mb-3">
+                <h5><FaUser className="me-2" /> User Information</h5>
+                <p><strong>Name:</strong> {selectedUser.name}</p>
+                <p><strong>Email:</strong> {selectedUser.email}</p>
+                <p><strong>Phone:</strong> {selectedUser.phone || 'N/A'}</p>
+                <p>
+                  <strong>Registration Date:</strong> {selectedUser.createdAt ? 
+                    new Date(selectedUser.createdAt).toLocaleDateString() : 'N/A'}
+                </p>
+                <p>
+                  <strong>Role:</strong> 
+                  <Badge 
+                    bg={getRoleBadgeVariant(selectedUser.role)} 
+                    className="ms-2"
+                  >
+                    {selectedUser.role ? 
+                      selectedUser.role.charAt(0).toUpperCase() + selectedUser.role.slice(1) : 'Unknown'}
+                  </Badge>
+                </p>
+              </Col>
+              <Col md={6} className="mb-3">
+                <h5><FaMapMarkerAlt className="me-2" /> Address</h5>
+                {selectedUser.address ? (
+                  <>
+                    <p><strong>Street:</strong> {selectedUser.address.street || 'N/A'}</p>
+                    <p><strong>City:</strong> {selectedUser.address.city || 'N/A'}</p>
+                    <p><strong>State:</strong> {selectedUser.address.state || 'N/A'}</p>
+                    <p><strong>Zip:</strong> {selectedUser.address.zipCode || 'N/A'}</p>
+                    <p><strong>Country:</strong> {selectedUser.address.country || 'N/A'}</p>
+                  </>
+                ) : (
+                  <p>No address information available.</p>
+                )}
+              </Col>
+            </Row>
+            
+            {selectedUser.adoptionHistory && selectedUser.adoptionHistory.length > 0 && (
+              <div className="mb-4">
+                <h5>Adoption Applications</h5>
+                <p>This user has {selectedUser.adoptionHistory.length} adoption applications.</p>
+              </div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowUserDetails(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </div>
   );
 };

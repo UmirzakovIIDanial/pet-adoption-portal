@@ -3,15 +3,17 @@ import React, { useState } from 'react';
 import { Card, Table, Badge, Button, Form, Modal } from 'react-bootstrap';
 import { FaEye, FaCheck, FaTimes, FaSearch } from 'react-icons/fa';
 import Pagination from '../Common/Pagination';
+import { Link } from 'react-router-dom';
 
 const ManageShelters = ({ shelters, loading, error, onVerify }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // Добавляем состояние для фильтра
   const [showDetails, setShowDetails] = useState(false);
   const [selectedShelter, setSelectedShelter] = useState(null);
   
-  // Filter shelters based on search term
+  // Фильтрация приютов с учетом статуса верификации
   const filteredShelters = shelters.filter(shelter => {
     const shelterName = shelter.name?.toLowerCase() || '';
     const contactName = shelter.contactPerson?.name?.toLowerCase() || '';
@@ -19,12 +21,20 @@ const ManageShelters = ({ shelters, loading, error, onVerify }) => {
     
     const term = searchTerm.toLowerCase();
     
-    return shelterName.includes(term) || 
+    // Проверяем соответствие поисковому запросу
+    const matchesSearch = shelterName.includes(term) || 
            contactName.includes(term) || 
            email.includes(term);
+    
+    // Проверяем соответствие статусу верификации
+    const matchesStatus = statusFilter === '' || 
+                          (statusFilter === 'verified' && shelter.verified) ||
+                          (statusFilter === 'unverified' && !shelter.verified);
+    
+    return matchesSearch && matchesStatus;
   });
   
-  // Pagination logic
+  // Пагинация
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredShelters.slice(indexOfFirstItem, indexOfLastItem);
@@ -41,6 +51,12 @@ const ManageShelters = ({ shelters, loading, error, onVerify }) => {
   const handleCloseDetails = () => {
     setShowDetails(false);
     setSelectedShelter(null);
+  };
+  
+  // Обработчик изменения фильтра статуса
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Сбрасываем на первую страницу при смене фильтра
   };
   
   if (error) {
@@ -68,10 +84,14 @@ const ManageShelters = ({ shelters, loading, error, onVerify }) => {
                 className="ps-4"
               />
             </div>
-            <Form.Select className="w-auto">
-              <option value="">All Statuses</option>
-              <option value="verified">Verified</option>
-              <option value="unverified">Unverified</option>
+            <Form.Select 
+                className="w-auto"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+            >
+                <option value="">All Statuses</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
             </Form.Select>
           </div>
           
@@ -162,184 +182,162 @@ const ManageShelters = ({ shelters, loading, error, onVerify }) => {
       </Card>
       
       {/* Shelter Details Modal */}
-      {selectedShelter && (
+        {selectedShelter && (
         <Modal show={showDetails} onHide={handleCloseDetails} size="lg">
-          <Modal.Header closeButton>
+            <Modal.Header closeButton>
             <Modal.Title>{selectedShelter.name}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
+            </Modal.Header>
+            <Modal.Body>
             <div className="mb-4">
-              <div className="d-flex align-items-center mb-3">
-                <div className="shelter-logo-lg me-3">
-                  <img
-                    src={selectedShelter.logo 
-                      ? `/uploads/shelters/${selectedShelter.logo}` 
-                      : '/images/shelter-placeholder.jpg'
-                    }
-                    alt={selectedShelter.name}
-                    className="img-fluid rounded"
-                  />
+                <div className="d-flex align-items-center mb-3">
+                {/* Аватар приюта - заменяем изображение на блок с инициалами */}
+                <div className="shelter-avatar me-3" style={{
+                    width: '80px',
+                    height: '80px',
+                    backgroundColor: 'var(--primary-color)',
+                    borderRadius: 'var(--border-radius)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '2rem',
+                    fontWeight: '600'
+                }}>
+                    {selectedShelter.name?.charAt(0)?.toUpperCase() || 'S'}
                 </div>
                 <div>
-                  <h4 className="mb-1">{selectedShelter.name}</h4>
-                  <p className="mb-0">
+                    <h4 className="mb-1">{selectedShelter.name}</h4>
+                    <p className="mb-0">
                     {selectedShelter.verified ? (
-                      <Badge bg="success">Verified</Badge>
+                        <Badge bg="success">Verified</Badge>
                     ) : (
-                      <Badge bg="warning">Pending Verification</Badge>
+                        <Badge bg="warning">Pending Verification</Badge>
                     )}
-                  </p>
+                    </p>
                 </div>
-              </div>
-              
-              <p>{selectedShelter.description}</p>
+                </div>
+                
+                <p>{selectedShelter.description}</p>
             </div>
             
             <div className="mb-4">
-              <h5>Contact Information</h5>
-              <div className="row">
+                <h5>Contact Information</h5>
+                <div className="row">
                 <div className="col-md-6">
-                  <p><strong>Contact Person:</strong> {selectedShelter.contactPerson?.name || 'N/A'}</p>
-                  <p><strong>Position:</strong> {selectedShelter.contactPerson?.position || 'N/A'}</p>
+                    <p><strong>Contact Person:</strong> {selectedShelter.contactPerson?.name || 'N/A'}</p>
+                    <p><strong>Position:</strong> {selectedShelter.contactPerson?.position || 'N/A'}</p>
                 </div>
                 <div className="col-md-6">
-                  <p><strong>Email:</strong> {selectedShelter.contactPerson?.email || 'N/A'}</p>
-                  <p><strong>Phone:</strong> {selectedShelter.contactPerson?.phone || 'N/A'}</p>
+                    <p><strong>Email:</strong> {selectedShelter.contactPerson?.email || 'N/A'}</p>
+                    <p><strong>Phone:</strong> {selectedShelter.contactPerson?.phone || 'N/A'}</p>
                 </div>
-              </div>
+                </div>
             </div>
             
             {selectedShelter.website && (
-              <p><strong>Website:</strong> <a href={selectedShelter.website} target="_blank" rel="noopener noreferrer">{selectedShelter.website}</a></p>
+                <p><strong>Website:</strong> <a href={selectedShelter.website} target="_blank" rel="noopener noreferrer">{selectedShelter.website}</a></p>
             )}
             
             {selectedShelter.socialMedia && (
-              <div className="mb-4">
+                <div className="mb-4">
                 <h5>Social Media</h5>
                 <div className="row">
-                  {selectedShelter.socialMedia.facebook && (
+                    {selectedShelter.socialMedia.facebook && (
                     <div className="col-md-4">
-                      <p><strong>Facebook:</strong> {selectedShelter.socialMedia.facebook}</p>
+                        <p><strong>Facebook:</strong> {selectedShelter.socialMedia.facebook}</p>
                     </div>
-                  )}
-                  {selectedShelter.socialMedia.instagram && (
+                    )}
+                    {selectedShelter.socialMedia.instagram && (
                     <div className="col-md-4">
-                      <p><strong>Instagram:</strong> {selectedShelter.socialMedia.instagram}</p>
+                        <p><strong>Instagram:</strong> {selectedShelter.socialMedia.instagram}</p>
                     </div>
-                  )}
-                  {selectedShelter.socialMedia.twitter && (
+                    )}
+                    {selectedShelter.socialMedia.twitter && (
                     <div className="col-md-4">
-                      <p><strong>Twitter:</strong> {selectedShelter.socialMedia.twitter}</p>
+                        <p><strong>Twitter:</strong> {selectedShelter.socialMedia.twitter}</p>
                     </div>
-                  )}
+                    )}
                 </div>
-              </div>
+                </div>
             )}
             
             {selectedShelter.operatingHours && selectedShelter.operatingHours.length > 0 && (
-              <div className="mb-4">
+                <div className="mb-4">
                 <h5>Operating Hours</h5>
                 <Table striped bordered size="sm">
-                  <thead>
+                    <thead>
                     <tr>
-                      <th>Day</th>
-                      <th>Hours</th>
+                        <th>Day</th>
+                        <th>Hours</th>
                     </tr>
-                  </thead>
-                  <tbody>
+                    </thead>
+                    <tbody>
                     {selectedShelter.operatingHours.map((hours, index) => (
-                      <tr key={index}>
+                        <tr key={index}>
                         <td>{hours.day}</td>
                         <td>
-                          {hours.isClosed ? 'Closed' : `${hours.open} - ${hours.close}`}
+                            {hours.isClosed ? 'Closed' : `${hours.open} - ${hours.close}`}
                         </td>
-                      </tr>
+                        </tr>
                     ))}
-                  </tbody>
+                    </tbody>
                 </Table>
-              </div>
+                </div>
             )}
             
             {selectedShelter.pets && selectedShelter.pets.length > 0 && (
-              <div className="mb-4">
+                <div className="mb-4">
                 <h5>Pets ({selectedShelter.pets.length})</h5>
                 <div className="shelter-pets-preview">
-                  <div className="row">
-                    {selectedShelter.pets.slice(0, 8).map((pet, index) => (
-                      <div key={index} className="col-md-3 col-6 mb-3">
-                        <div className="pet-card-small">
-                          <img
-                            src={pet.photos?.[0] 
-                              ? `/uploads/pets/${pet.photos[0]}` 
-                              : '/images/pet-placeholder-small.jpg'
-                            }
-                            alt={pet.name}
-                            className="img-fluid rounded"
-                          />
-                          <div className="pet-name">{pet.name}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {selectedShelter.pets.length > 8 && (
-                    <div className="text-center">
-                      <p className="text-muted">+ {selectedShelter.pets.length - 8} more pets</p>
-                    </div>
-                  )}
+                    {/* Заменяем карточки с изображениями питомцев на текстовое описание */}
+                    <p className="text-muted mb-2">This shelter manages {selectedShelter.pets.length} pet(s).</p>
+                    <Button 
+                    as={Link} 
+                    to="/pets" 
+                    variant="outline-primary" 
+                    size="sm"
+                    >
+                    View All Pets
+                    </Button>
                 </div>
-              </div>
+                </div>
             )}
             
             {selectedShelter.verificationDocuments && selectedShelter.verificationDocuments.length > 0 && (
-              <div className="mb-4">
+                <div className="mb-4">
                 <h5>Verification Documents</h5>
-                <div className="row">
-                  {selectedShelter.verificationDocuments.map((doc, index) => (
-                    <div key={index} className="col-md-4 mb-3">
-                      <div className="document-card">
-                        <a 
-                          href={`/uploads/shelters/documents/${doc}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="btn btn-outline-primary btn-sm w-100"
-                        >
-                          View Document {index + 1}
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                <p className="text-muted">{selectedShelter.verificationDocuments.length} document(s) submitted for verification.</p>
                 </div>
-              </div>
             )}
-          </Modal.Body>
-          <Modal.Footer>
+            </Modal.Body>
+            <Modal.Footer>
             <Button variant="secondary" onClick={handleCloseDetails}>
-              Close
+                Close
             </Button>
             {selectedShelter.verified ? (
-              <Button 
+                <Button 
                 variant="danger" 
                 onClick={() => {
-                  onVerify(selectedShelter._id, false);
-                  handleCloseDetails();
+                    onVerify(selectedShelter._id, false);
+                    handleCloseDetails();
                 }}
-              >
+                >
                 Revoke Verification
-              </Button>
+                </Button>
             ) : (
-              <Button 
+                <Button 
                 variant="success" 
                 onClick={() => {
-                  onVerify(selectedShelter._id, true);
-                  handleCloseDetails();
+                    onVerify(selectedShelter._id, true);
+                    handleCloseDetails();
                 }}
-              >
+                >
                 Verify Shelter
-              </Button>
+                </Button>
             )}
-          </Modal.Footer>
+            </Modal.Footer>
         </Modal>
-      )}
+        )}
     </div>
   );
 };
