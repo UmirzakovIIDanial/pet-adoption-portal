@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 70 70">
+  <circle cx="35" cy="35" r="35" fill="#f8fafc"/>
+  <circle cx="35" cy="35" r="33" fill="#3b82f6"/>
+  <circle cx="35" cy="27" r="12" fill="#f1f5f9"/>
+  <path d="M12 50 Q 35 70 58 50" fill="#f1f5f9"/>
+  <text x="35" y="38" font-family="Arial" font-size="14" text-anchor="middle" fill="#1e293b">SJ</text>
+</svg>

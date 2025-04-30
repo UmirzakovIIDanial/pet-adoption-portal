@@ -1,0 +1,27 @@
+# Dockerfile.server
+FROM node:18-alpine
+
+# Устанавливаем переменные окружения для npm
+ENV NPM_CONFIG_LOGLEVEL=error
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
+ENV NPM_CONFIG_PROGRESS=false
+ENV NPM_CONFIG_FETCH_TIMEOUT=600000
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=60000
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
+ENV NPM_CONFIG_FETCH_RETRIES=5
+
+WORKDIR /app
+
+# Копируем только файлы для установки зависимостей
+COPY server/package.json ./
+
+# Используем обычный npm install с флагами для ускорения и отключения лишних проверок
+RUN npm install --production --no-fund --no-audit
+
+# Теперь копируем остальные файлы
+COPY server/ .
+
+EXPOSE 5000
+
+CMD ["npm", "start"]

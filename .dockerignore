@@ -1,0 +1,13 @@
+# .dockerignore
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.DS_Store
+README.md
+docker-compose.yml
+Dockerfile*
+.dockerignore
+mongodb_data/
+uploads/
