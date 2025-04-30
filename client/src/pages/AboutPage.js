@@ -8,7 +8,7 @@ const AboutPage = () => {
   return (
     <Container className="py-5">
       <Row className="mb-5">
-        <Col lg={6} className="mb-4 mb-lg-0">
+        <Col lg={12} className="mb-4 mb-lg-0">
           <h1 className="display-5 mb-4">About Pet Adoption Portal</h1>
           <p className="lead mb-4">
             Our mission is to connect loving homes with pets in need, making the adoption process 
@@ -31,15 +31,6 @@ const AboutPage = () => {
             <Button as={Link} to="/register" variant="outline-primary" size="lg">
               Join Us
             </Button>
-          </div>
-        </Col>
-        <Col lg={6}>
-          <div className="about-image-container rounded overflow-hidden shadow">
-            <img 
-              src="/images/about-hero.jpg" 
-              alt="Happy adopted pets and their owners" 
-              className="img-fluid w-100"
-            />
           </div>
         </Col>
       </Row>
