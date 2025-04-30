@@ -1,5 +1,6 @@
 // server/controllers/pet.controller.js
 const path = require('path');
+const fs = require('fs');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async.middleware');
 const Pet = require('../models/pet.model');
@@ -84,7 +85,21 @@ exports.createPet = asyncHandler(async (req, res, next) => {
   // Create custom filename
   file.name = `photo_${Date.now()}${path.parse(file.name).ext}`;
 
-  file.mv(`${process.env.UPLOAD_DIR}/pets/${file.name}`, async err => {
+  // Определим директорию для загрузки
+  const uploadDir = process.env.UPLOAD_DIR || './public/uploads';
+  
+  // Создадим директорию, если она не существует
+  const petsDir = `${uploadDir}/pets`;
+  
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  
+  if (!fs.existsSync(petsDir)) {
+    fs.mkdirSync(petsDir, { recursive: true });
+  }
+
+  file.mv(`${petsDir}/${file.name}`, async err => {
     if (err) {
       console.error(err);
       return next(new ErrorResponse(`Problem with file upload`, 500));
@@ -232,7 +247,21 @@ exports.petPhotoUpload = asyncHandler(async (req, res, next) => {
   // Create custom filename
   file.name = `photo_${pet._id}_${Date.now()}${path.parse(file.name).ext}`;
 
-  file.mv(`${process.env.UPLOAD_DIR}/pets/${file.name}`, async err => {
+  // Определим директорию для загрузки
+  const uploadDir = process.env.UPLOAD_DIR || './public/uploads';
+  
+  // Создадим директорию, если она не существует
+  const petsDir = `${uploadDir}/pets`;
+  
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  
+  if (!fs.existsSync(petsDir)) {
+    fs.mkdirSync(petsDir, { recursive: true });
+  }
+
+  file.mv(`${petsDir}/${file.name}`, async err => {
     if (err) {
       console.error(err);
       return next(new ErrorResponse(`Problem with file upload`, 500));

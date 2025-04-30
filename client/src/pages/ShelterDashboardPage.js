@@ -32,30 +32,60 @@ const ShelterDashboardPage = () => {
   const { pets, getPets, deletePet, loading: petsLoading } = useContext(PetContext);
   
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchShelterData = async () => {
       try {
         setLoading(true);
         
-        // Get shelter profile
-        const shelterRes = await axios.get('/api/users/shelter');
-        setShelter(shelterRes.data.data);
+        // Получаем профиль приюта
+        try {
+          const shelterRes = await axios.get('/api/users/shelter');
+          if (isMounted) {
+            setShelter(shelterRes.data.data);
+          }
+        } catch (shelterErr) {
+          console.error('Error fetching shelter data:', shelterErr);
+        }
         
-        // Get pets
-        await getPets();
+        // Получаем питомцев
+        if (isMounted) {
+          await getPets();
+        }
         
-        // Get shelter's adoption applications
-        const adoptionsRes = await axios.get('/api/users/shelter/adoptions');
-        setAdoptions(adoptionsRes.data.data);
+        // Получаем заявки на усыновление
+        try {
+          const adoptionsRes = await axios.get('/api/users/shelter/adoptions');
+          if (isMounted) {
+            setAdoptions(adoptionsRes.data.data || []);
+          }
+        } catch (adoptionsErr) {
+          console.error('Error fetching adoptions:', adoptionsErr);
+          if (isMounted) {
+            setAdoptions([]);
+          }
+        }
         
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       } catch (err) {
-        setError(err.response?.data?.error || 'Error fetching shelter data');
-        setLoading(false);
+        console.error('General error:', err);
+        if (isMounted) {
+          setError(err.response?.data?.error || 'Error fetching shelter data');
+          setLoading(false);
+        }
       }
     };
     
     fetchShelterData();
-  }, [getPets]);
+    
+    // Функция очистки
+    return () => {
+      isMounted = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const handleDeleteClick = (pet) => {
     setPetToDelete(pet);
@@ -192,7 +222,6 @@ const ShelterDashboardPage = () => {
   const pendingApplications = adoptions.filter(app => app.status === 'Pending').length;
   const approvedApplications = adoptions.filter(app => app.status === 'Approved').length;
   const rejectedApplications = adoptions.filter(app => app.status === 'Rejected').length;
-  const completedApplications = adoptions.filter(app => app.status === 'Completed').length;
   
   return (
     <Container fluid className="py-4">

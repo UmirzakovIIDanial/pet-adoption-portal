@@ -4,6 +4,7 @@ const asyncHandler = require('../middleware/async.middleware');
 const Adoption = require('../models/adoption.model');
 const Pet = require('../models/pet.model');
 const User = require('../models/user.model');
+const Shelter = require('../models/shelter.model');
 
 // @desc    Get user's adoption applications
 // @route   GET /api/users/adoptions
@@ -194,8 +195,69 @@ exports.updateAdoption = asyncHandler(async (req, res, next) => {
     runValidators: true
   });
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     data: adoption
   });
 });
+
+// @desc    Get shelter profile
+// @route   GET /api/users/shelter
+// @access  Private (Shelter only)
+exports.getShelterProfile = asyncHandler(async (req, res, next) => {
+  // Найдем профиль приюта для текущего пользователя
+  const shelter = await Shelter.findOne({ user: req.user.id });
+
+  // Если профиль приюта не найден, но пользователь имеет роль shelter, создадим профиль
+  if (!shelter && req.user.role === 'shelter') {
+    // Создаем базовый профиль приюта
+    const newShelter = await Shelter.create({
+      user: req.user.id,
+      name: req.user.name,
+      description: `Shelter operated by ${req.user.name}`,
+      contactPerson: {
+        name: req.user.name,
+        position: 'Owner',
+        phone: req.user.phone || 'Not specified',
+        email: req.user.email
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: newShelter
+    });
+  }
+
+  if (!shelter) {
+    return next(
+      new ErrorResponse(`No shelter profile found for this user`, 404)
+    );
+  }
+
+  res.status(200).json({
+    success: true,
+    data: shelter
+  });
+});
+
+// @desc    Get shelter's adoption applications
+// @route   GET /api/users/shelter/adoptions
+// @access  Private (Shelter only)
+exports.getShelterAdoptions = asyncHandler(async (req, res, next) => {
+    const adoptions = await Adoption.find({ shelter: req.user.id })
+      .populate({
+        path: 'pet',
+        select: 'name type breed photos adoptionStatus'
+      })
+      .populate({
+        path: 'applicant',
+        select: 'name email phone'
+      });
+  
+    res.status(200).json({
+      success: true,
+      count: adoptions.length,
+      data: adoptions
+    });
+  });
