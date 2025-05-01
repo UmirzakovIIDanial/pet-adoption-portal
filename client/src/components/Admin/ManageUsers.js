@@ -1,7 +1,7 @@
 // client/src/components/Admin/ManageUsers.js
 import React, { useState } from 'react';
 import { Card, Table, Badge, Button, Form, Modal, Row, Col } from 'react-bootstrap';
-import { FaEye, FaSearch, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaEye, FaSearch, FaUser, FaMapMarkerAlt } from 'react-icons/fa';
 import Pagination from '../Common/Pagination';
 
 const ManageUsers = ({ users, loading, error }) => {

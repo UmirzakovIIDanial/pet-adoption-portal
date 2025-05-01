@@ -28,6 +28,7 @@ const ShelterDashboardPage = () => {
   const [statusComment, setStatusComment] = useState('');
   const [statusLoading, setStatusLoading] = useState(false);
   const [shelterPets, setShelterPets] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('');
   
   const { user } = useContext(AuthContext);
   const { pets: contextPets, deletePet, loading: petsLoading } = useContext(PetContext);
@@ -178,16 +179,19 @@ const ShelterDashboardPage = () => {
     );
   });
   
-  // Filter adoptions based on search term
   const filteredAdoptions = adoptions.filter(adoption => {
-    if (!searchTerm) return true;
+    if (!searchTerm && !statusFilter) return true;
     
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = !searchTerm || 
       (adoption.pet?.name?.toLowerCase() || '').includes(term) ||
       (adoption.applicant?.name?.toLowerCase() || '').includes(term) ||
-      (adoption.status?.toLowerCase() || '').includes(term)
-    );
+      (adoption.status?.toLowerCase() || '').includes(term);
+    
+    // Проверяем соответствие фильтру статуса
+    const matchesStatus = !statusFilter || adoption.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
   
   // Pagination for pets
@@ -221,6 +225,11 @@ const ShelterDashboardPage = () => {
       default:
         return 'primary';
     }
+  };
+
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1); // Сбрасываем на первую страницу при смене фильтра
   };
   
   if (loading || petsLoading) {
@@ -456,13 +465,17 @@ const ShelterDashboardPage = () => {
                         className="ps-4"
                       />
                     </div>
-                    <Form.Select className="w-auto">
-                      <option value="">All Statuses</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Approved">Approved</option>
-                      <option value="Rejected">Rejected</option>
-                      <option value="Completed">Completed</option>
-                    </Form.Select>
+                    <Form.Select 
+  className="w-auto"
+  value={statusFilter}
+  onChange={handleStatusFilterChange}
+>
+  <option value="">All Statuses</option>
+  <option value="Pending">Pending</option>
+  <option value="Approved">Approved</option>
+  <option value="Rejected">Rejected</option>
+  <option value="Completed">Completed</option>
+</Form.Select>
                   </div>
                   
                   {currentAdoptions.length === 0 ? (
