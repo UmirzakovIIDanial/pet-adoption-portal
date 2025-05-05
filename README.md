@@ -45,75 +45,8 @@ npm install
 cd ..
 
 
-4 CREATE .env file and upload it on the root of project
+4 !!! change Mongo.db DATA on .env file
 
-!!! change Mongo.db DATA 
-version: '3.8'
-
-services:
-  # MongoDB service
-  mongodb:
-    image: mongo:latest
-    restart: always
-    volumes:
-      - mongodb_data:/data/db
-    ports:
-      - "${MONGO_PORT}:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    networks:
-      - app-network
-
-  # Backend API service
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
-    restart: always
-    ports:
-      - "${SERVER_PORT}:5000"
-    depends_on:
-      - mongodb
-    environment:
-      - NODE_ENV=${NODE_ENV}
-      - PORT=5000
-      - MONGO_URI=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRE=${JWT_EXPIRE}
-      - CLIENT_URL=http://client:${CLIENT_PORT}
-    volumes:
-      - ./server:/app
-      - /app/node_modules
-    networks:
-      - app-network
-
-  # Frontend client service
-  client:
-    build:
-      context: .
-      dockerfile: Dockerfile.client
-    restart: always
-    ports:
-      - "${CLIENT_PORT}:3000"
-    depends_on:
-      - server
-    environment:
-      - NODE_ENV=${NODE_ENV}
-      - REACT_APP_API_URL=http://localhost:${SERVER_PORT}/api
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  mongodb_data:
-    driver: local
 
 
 
