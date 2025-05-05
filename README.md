@@ -95,7 +95,6 @@ Aliaskar Sabitkhan, 230103273, 15-P
 
 Ali Zhanibek, 230103150 19-P
 
-This template includes all the necessary sections, and you can modify the project-specific details such as repository URL, API endpoint information, and team members.
 
 
 
