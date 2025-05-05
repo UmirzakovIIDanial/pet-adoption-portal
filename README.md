@@ -27,7 +27,7 @@ Installation Instructions
 bash
 Копировать
 Редактировать
-git clone https://github.com/yourusername/yourrepository.git
+git clone https://github.com/UmirzakovIIDanial/pet-adoption-portal.git
 2. Navigate into the project directory
 bash
 Копировать
