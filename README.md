@@ -78,10 +78,13 @@ Mobile Responsiveness: The app is still being optimized for smaller mobile scree
 
 References
 ReactJS Documentation
+https://ru.legacy.reactjs.org/docs/getting-started.html
 
 Node.js Documentation
+https://nodejs.org/docs/latest/api/
 
 MongoDB Documentation
+https://www.mongodb.com/docs/
 
 Team Members
 Danial Umirzak, 230103262, 19-P
