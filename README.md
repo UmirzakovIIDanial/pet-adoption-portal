@@ -68,13 +68,8 @@ GET /api/pets: Fetch all pets available for adoption.
 POST /api/adopt: Submit an adoption application for a pet.
 
 Testing
-To run tests, navigate to the project directory and execute the following command:
+We haven't test
 
-bash
-Копировать
-Редактировать
-npm test
-This will run unit and integration tests, ensuring that all functionalities are working as expected.
 
 Known Issues / Limitations (Optional)
 Mac OS: Some features may not work as expected on Mac OS due to environment-specific configurations.
