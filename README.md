@@ -23,6 +23,8 @@ Database: MongoDB, Mongoose
 Others: Docker, Docker Compose
 
 Installation Instructions
+
+
 1. Clone the repository
 bash
 git clone https://github.com/UmirzakovIIDanial/pet-adoption-portal.git
@@ -41,6 +43,7 @@ bash
 cd server
 npm install
 cd ..
+
 4. Start the application
 bash
 docker-compose up --build
