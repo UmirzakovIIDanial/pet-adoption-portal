@@ -25,20 +25,14 @@ Others: Docker, Docker Compose
 Installation Instructions
 1. Clone the repository
 bash
-Копировать
-Редактировать
 git clone https://github.com/UmirzakovIIDanial/pet-adoption-portal.git
 2. Navigate into the project directory
 bash
-Копировать
-Редактировать
 cd yourrepository
 3. Install dependencies
 For the frontend:
 
 bash
-Копировать
-Редактировать
 cd client
 npm install
 cd ..
