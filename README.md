@@ -97,10 +97,10 @@ This template includes all the necessary sections, and you can modify the projec
 
 
 ### Home Page
-![Home Page](screenshot_1.png)
+![Home Page](Screenshot_1.png)
 
 ### Adoption Form
-![Adoption Form](screenshot_2.png)
+![Adoption Form](Screenshot_2.png)
 
 
 
